@@ -1,7 +1,7 @@
 import pygame # type: ignore
 
 class Dialogue(pygame.sprite.Sprite):
-    def __init__(self, agent,  text='', outline_color=(0,0,0), width=0, height=0):
+    def __init__(self, agent, text='', outline_color=(0,0,0), width=0, height=0):
         super().__init__()
         self.position = (agent.position[0], agent.position[1] - height)
         self.outline_color = outline_color

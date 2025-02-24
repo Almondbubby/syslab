@@ -1,9 +1,8 @@
 import pygame #type: ignore
-from Agents.rishabh import Rishabh
-from Agents.gabriel import Gabriel
+from Agents.base_agent import Base_Agent
 from Dialogue.Dialogue import Dialogue
 import time
-
+import random
 
 # pygame setup
 pygame.init()
@@ -12,29 +11,17 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 
-rrole_prompt = ''
-with open('Prompts/rishabh_role.txt', 'r') as file:
-    rrole_prompt = file.read()
+role_prompts=[open('Prompts/rishabh_role.txt').read(), open('Prompts/gabriel_role.txt').read(), open('Prompts/raymond_role.txt').read()]
+agents=[Base_Agent(random.randint(1, 1280), random.randint(1, 720), role_prompt=x) for x in role_prompts]
 
-rishabh = Rishabh(100, 100, role_prompt = rrole_prompt)
-
-
-grole_prompt = ''
-with open('Prompts/gabriel_role.txt', 'r') as file:
-    grole_prompt = file.read()
-
-gabriel = Gabriel(500, 100, role_prompt = grole_prompt)
-
-converse = True
 start = time.time()
+last1 = 0
+last2 = 0
 
-conversation = ''
-rresponse = rishabh.prompt("Env Your friend Gabriel is in front of you", conversation)
-conversation += rresponse + '\n'
-
-rdialogue = Dialogue(rishabh, '')
-gdialogue = Dialogue(gabriel, '')
-rdialogue = Dialogue(rishabh, rresponse)
+def distance(a, b):
+    a=a.position
+    b=b.position
+    return (a[0]-b[0])**2+(a[1]-b[1])**2
 
 while running:
     for event in pygame.event.get():
@@ -46,34 +33,52 @@ while running:
     
     screen.fill("white")
 
-    gresponse = ''
-    if converse and int(time.time() - start) % 10 == 0:
-        gresponse = gabriel.prompt(rresponse, conversation)
-        conversation += gresponse + '\n'
-        gdialogue = Dialogue(gabriel, gresponse)
-        if "end conv" in gresponse:
-            converse = False
-        rresponse = rishabh.prompt(gresponse, conversation)
-        conversation += rresponse + '\n'
-        rdialogue = Dialogue(rishabh, rresponse)
-        if "end conv" in rresponse:
-            converse = False
-        print(converse)
-        print('\nbang')
+    if int(time.time()-start - last1) >= 2:
+        last1=time.time()-start
+        for i, agent in enumerate(agents):
+            if agent.conversing!=-1:
+                if not agent.response:
+                    agent.response="Env there is a person in front of you, ask them what their name is"
+                if "end conv" in agent.response:
+                    agents[agent.conversing].conversing=-1
+                    agent.conversing=-1
+                    agent.response=None
+                    agent.dialogue=Dialogue(agent)
+                else:
+                    response = agent.prompt(agent.response)
+                    agent.conversation[-1] += response + '\n'
+                    agents[agent.conversing].response=response
+                    agent.dialogue = Dialogue(agent, response)
+                    if "end conv" in response:
+                        agents[agent.conversing].conversing=-1
+                        agent.conversing=-1
+                        agent.response=None
+                        agent.dialogue=Dialogue(agent)
+        
+    if int(time.time() - last2) >= 2:
+        last2=time.time()-start
+        for i, agent in enumerate(agents):
+            if agent.conversing==-1:
+                r=random.randint(1, 4)
+                if r==1: agent.move_left()
+                elif r==2: agent.move_right()
+                elif r==3: agent.move_up()
+                elif r==4: agent.move_down()
 
+                for j in range(len(agents)):
+                    if i!=j and agents[j].conversing==-1:
+                        if distance(agent, agents[j])<=100000 and distance(agent, agents[j])>=10000 and random.randint(1, 10)<=1:
+                            agent.conversing=j
+                            agent.conversation.append("")
+                            agent.stop_moving()
+                            agents[j].conversing=i
+                            agents[j].conversation.append("")
+                            agents[j].stop_moving()
 
-    rishabh.update()
-    rishabh.draw(screen)
-    rdialogue.draw(screen)
-    rresponse = ''
-
-    gabriel.update()
-    gabriel.draw(screen)
-    gdialogue.draw(screen)
-    gresponse = ''
-
-
-
+    for i, agent in enumerate(agents):
+        agent.update()
+        agent.draw(screen)
+        agent.dialogue.draw(screen)
 
     pygame.display.flip()
     dt = clock.tick(60) / 1000
