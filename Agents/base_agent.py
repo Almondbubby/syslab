@@ -16,13 +16,14 @@ class Base_Agent(pygame.sprite.Sprite):
         self.response = None
         self.dialogue = Dialogue(self)
         self.movement_bound = 30
+        self.tasks = self.prompt("Give a list of tasks for me to do throughout the day")
 
     def prompt(self, p):
-        response: ChatResponse = chat(model='llama3.2', messages=[
-        {'role': 'system', 'content': self.role_prompt},
-        {'role': 'system', 'content': f"Conversation thus far: \n {self.conversation[-1]}"},
-        {'role': 'user', 'content': p}
-        ])
+        a=[{'role': 'system', 'content': self.role_prompt}]
+        if self.conversation:
+            a.append({'role': 'system', 'content': f"Conversation thus far: \n {self.conversation[-1]}"})
+        a.append({'role': 'user', 'content': p})
+        response: ChatResponse = chat(model='llama3.2', messages=a)
         print(self.conversing)
         print("Prompt:", p)
         print("Response:", response.message.content)

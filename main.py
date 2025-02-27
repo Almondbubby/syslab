@@ -6,12 +6,12 @@ import random
 
 # pygame setup
 pygame.init()
-screen = pygame.display.set_mode((1280, 720))
+screen = pygame.display.set_mode((1600, 900))
 clock = pygame.time.Clock()
 running = True
 dt = 0
 
-role_prompts=[open('Prompts/rishabh_role.txt').read(), open('Prompts/gabriel_role.txt').read(), open('Prompts/raymond_role.txt').read()]
+role_prompts=[open('Prompts/rishabh_role.txt').read(), open('Prompts/gabriel_role.txt').read(), open('Prompts/raymond_role.txt').read(), open('Prompts/deven_role.txt').read()]
 agents=[Base_Agent(random.randint(1, 1280), random.randint(1, 720), role_prompt=x) for x in role_prompts]
 
 start = time.time()
@@ -39,13 +39,13 @@ while running:
             if agent.conversing!=-1:
                 if not agent.response:
                     agent.response="Env there is a person in front of you, ask them what their name is"
-                if "end conv" in agent.response:
+                if "end conv" in agent.response.lower():
                     agents[agent.conversing].conversing=-1
                     agent.conversing=-1
                     agent.response=None
                     agent.dialogue=Dialogue(agent)
                 else:
-                    response = agent.prompt(agent.response)
+                    response = agent.prompt(agent.response.lower())
                     agent.conversation[-1] += response + '\n'
                     agents[agent.conversing].response=response
                     agent.dialogue = Dialogue(agent, response)
@@ -67,7 +67,7 @@ while running:
 
                 for j in range(len(agents)):
                     if i!=j and agents[j].conversing==-1:
-                        if distance(agent, agents[j])<=100000 and distance(agent, agents[j])>=10000 and random.randint(1, 10)<=1:
+                        if distance(agent, agents[j])<=100000 and distance(agent, agents[j])>=10000 and random.randint(1, 100)<=1:
                             agent.conversing=j
                             agent.conversation.append("")
                             agent.stop_moving()
@@ -78,10 +78,12 @@ while running:
     for i, agent in enumerate(agents):
         agent.update()
         agent.draw(screen)
+        if not agent.dialogue.text_list or not agent.dialogue.text_list[0]:
+            agent.dialogue = Dialogue(agent, agent.tasks)
         agent.dialogue.draw(screen)
 
     pygame.display.flip()
-    dt = clock.tick(60) / 1000
+    dt = clock.tick(30) / 1000
 
 pygame.quit()
 
