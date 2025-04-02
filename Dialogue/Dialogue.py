@@ -13,8 +13,9 @@ class Dialogue(pygame.sprite.Sprite):
         if width > 200:
             height = (width // 200) * 10 + 50
             width = 200
-            for i in range(0, len(text), 30):
-                text_list.append(text[i:i+30])
+            for t in text.strip().split('\n'):
+                for i in range(0, len(t), 30):
+                    text_list.append(t[i:i+30])
         if text_list == []:
             text_list.append(text)
         self.width = width
