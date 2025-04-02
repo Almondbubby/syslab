@@ -9,15 +9,13 @@ pygame.init()
 screen = pygame.display.set_mode((1600, 900))
 clock = pygame.time.Clock()
 running = True
-dt = 0
 
 names=["Cashier", "Teacher", "Student", "Worker"]
 role_prompts=[open("Prompts/"+name+".txt").read().strip() for name in names]
 agents=[Base_Agent(name, random.randint(1, 1280), random.randint(1, 720), role_prompt=role_prompts[i]) for i, name in enumerate(names)]
 
-start = time.time()
-last1 = 0
-last2 = 0
+counter=0
+counter2=0
 
 def distance(a, b):
     a=a.position
@@ -34,8 +32,9 @@ while running:
     
     screen.fill("white")
 
-    if int(time.time()-start - last1) >= 2:
-        last1=time.time()-start
+    counter+=1
+    if counter>=30:
+        counter=0
         for i, agent in enumerate(agents):
             if agent.conversing!=-1:
                 if not agent.conversation[-1]:
@@ -55,8 +54,9 @@ while running:
                         agent.conversing=-1
                         agent.dialogue=Dialogue(agent)
         
-    if int(time.time() - last2) >= 2:
-        last2=time.time()-start
+    counter2+=1
+    if counter>=30:
+        counter=0
         for i, agent in enumerate(agents):
             if agent.conversing==-1:
                 r=random.randint(1, 4)
@@ -78,8 +78,7 @@ while running:
             agent.dialogue = Dialogue(agent, agent.tasks)
         agent.dialogue.draw(screen)
 
-    pygame.display.flip()
-    dt = clock.tick(30) / 1000
+    clock.tick(10)
 
 pygame.quit()
 
