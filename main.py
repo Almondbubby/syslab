@@ -11,8 +11,9 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 
-role_prompts=[open('Prompts/rishabh_role.txt').read(), open('Prompts/gabriel_role.txt').read(), open('Prompts/raymond_role.txt').read(), open('Prompts/deven_role.txt').read()]
-agents=[Base_Agent(random.randint(1, 1280), random.randint(1, 720), role_prompt=x) for x in role_prompts]
+names=["Cashier", "Teacher", "Student", "Worker"]
+role_prompts=[open("Prompts/"+name+".txt").read().strip() for name in names]
+agents=[Base_Agent(name, random.randint(1, 1280), random.randint(1, 720), role_prompt=role_prompts[i]) for i, name in enumerate(names)]
 
 start = time.time()
 last1 = 0
@@ -37,22 +38,21 @@ while running:
         last1=time.time()-start
         for i, agent in enumerate(agents):
             if agent.conversing!=-1:
-                if not agent.response:
-                    agent.response="Env there is a person in front of you, ask them what their name is"
-                if "end conv" in agent.response.lower():
+                if not agent.conversation[-1]:
+                    agent.conversation="You notice a new person in front of you\n"
+                    agents[agent.conversing].conversing=i
+                    agents[agent.conversing].conversation.append("")
+                if "end conv" in agent.conversation[-1].lower():
                     agents[agent.conversing].conversing=-1
                     agent.conversing=-1
-                    agent.response=None
                     agent.dialogue=Dialogue(agent)
                 else:
-                    response = agent.prompt(agent.response.lower())
-                    agent.conversation[-1] += response + '\n'
-                    agents[agent.conversing].response=response
+                    response = agent.prompt()
+                    agents[agent.conversing].conversation[-1]+=f"{agent.name}: "+response
                     agent.dialogue = Dialogue(agent, response)
-                    if "end conv" in response:
+                    if "end conv" in response.lower():
                         agents[agent.conversing].conversing=-1
                         agent.conversing=-1
-                        agent.response=None
                         agent.dialogue=Dialogue(agent)
         
     if int(time.time() - last2) >= 2:
@@ -67,13 +67,9 @@ while running:
 
                 for j in range(len(agents)):
                     if i!=j and agents[j].conversing==-1:
-                        if distance(agent, agents[j])<=100000 and distance(agent, agents[j])>=10000 and random.randint(1, 100)<=1:
+                        if agent.should_converse(j):
                             agent.conversing=j
                             agent.conversation.append("")
-                            agent.stop_moving()
-                            agents[j].conversing=i
-                            agents[j].conversation.append("")
-                            agents[j].stop_moving()
 
     for i, agent in enumerate(agents):
         agent.update()
