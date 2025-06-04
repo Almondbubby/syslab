@@ -1,4 +1,4 @@
-# TJHSST Computer Systems Research Lab Project
+# Simulation of Human Behavior Through LLM-Based Autonomous Agents
 This project comes in the form of a simulated town where each person will act in a human way through prompting LLMs.
 
 For the LLM, we are using Llama 3.1 with the Ollama Python package. The game visuals use PyGame, a Python game development library.
